@@ -33,9 +33,9 @@ public class LibrarianCtrl {
     /* Log In Librarian */
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public String librarianLogIn(@RequestBody User user){
-	if(user.getEmail().equals("admin") && user.getPassword().equals("admin"))
-		return "admin";
+    public String librarianLogIn(@RequestBody User user) {
+        if (user.getEmail().equals("admin") && user.getPassword().equals("admin"))
+            return "admin";
         return librarianService.librarianLogIn(user);
     }
 
