@@ -25,10 +25,15 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/librarian")
 @RequiredArgsConstructor
-@CrossOrigin("http://localhost:3000")
+// @CrossOrigin("http://localhost:3000")
 public class LibrarianCtrl {
 
     private final LibrarianService librarianService;
+
+    @GetMapping("/hello")
+    public String hello(){
+        return "Hello";
+    }
 
     /* Log In Librarian */
     @PostMapping("/login")

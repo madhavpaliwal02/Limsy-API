@@ -30,6 +30,7 @@ public class IssuedBookCtrl {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public String issueBook(@RequestBody IssuedBookRequest issuedBookRequest) {
+        System.out.println(issuedBookRequest);
         issuedBookService.issueBook(issuedBookRequest);
         return "Book Issued successfully...";
     }

@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.stereotype.Service;
@@ -31,6 +32,15 @@ public class BookServiceImpl implements BookService {
     /* Create a Book */
     @Override
     public void createBook(BookRequest bookRequest) {
+        // Checking whether data exists
+        Book oldBook = this.bookRepo.findAll().stream().filter(book -> book.getTitle().equals(bookRequest.getTitle()) &&
+                book.getAuthorName().equals(bookRequest.getAuthorName()) &&
+                book.getEdition().equals(bookRequest.getEdition())).findAny().get();
+
+        if (oldBook != null)
+            throw new EntityExistsException("Book already exists...");
+
+        // Saving new book data
         Book book = mapToBook(bookRequest);
         book.setBookId(UUID.randomUUID().toString());
         book.setDate(new Date());

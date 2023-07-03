@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.stereotype.Service;
@@ -42,8 +43,23 @@ public class IssuedBookServiceImpl implements IssuedBookService {
 
     /* Issued a Book */
     @Override
-    public void issueBook(IssuedBookRequest issuedBookRequest) {
-        IssuedBook issuedBook = mapToIssuedBook(issuedBookRequest);
+    public void issueBook(IssuedBookRequest iBookRequest) {
+        System.out.println(iBookRequest);
+
+        List<IssuedBook> list = this.issuedBookRepo.findAll();
+
+        if (list.size() != 0) {
+            IssuedBook oldBook = list.stream()
+                    .filter(ibook -> ibook.getLibrarianId().equals(iBookRequest.getLibId()) &&
+                            ibook.getStudentId().equals(iBookRequest.getStuId()) &&
+                            ibook.getBookId().equals(iBookRequest.getBookId()))
+                    .findAny().get();
+
+            if (oldBook != null)
+                throw new EntityExistsException("Book already issued...");
+        }
+        // Saving new issuedBook data
+        IssuedBook issuedBook = mapToIssuedBook(iBookRequest);
         issuedBook.setIBookId(UUID.randomUUID().toString());
         issuedBook.setDate(new Date());
         issuedBookRepo.save(issuedBook);

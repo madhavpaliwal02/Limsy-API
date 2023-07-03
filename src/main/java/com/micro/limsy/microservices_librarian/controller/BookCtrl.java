@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/book")
 @RequiredArgsConstructor
-@CrossOrigin("http://localhost:3000")
+// @CrossOrigin("http://localhost:3000")
 public class BookCtrl {
 
     private final BookService bookService;

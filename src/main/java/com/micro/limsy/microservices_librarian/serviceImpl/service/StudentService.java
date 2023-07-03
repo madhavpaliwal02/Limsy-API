@@ -5,6 +5,7 @@ import java.util.List;
 import com.micro.limsy.microservices_librarian.dto.BookResponse;
 import com.micro.limsy.microservices_librarian.dto.StudentRequest;
 import com.micro.limsy.microservices_librarian.dto.StudentResponse;
+import com.micro.limsy.microservices_librarian.dto.User;
 import com.micro.limsy.microservices_librarian.model.Student;
 
 public interface StudentService {
@@ -19,7 +20,7 @@ public interface StudentService {
     public StudentResponse getStudent(String studentId);
 
     /* Update a Student */
-    public StudentResponse updateStudent(StudentRequest studentRequest);
+    public StudentResponse updateStudent(String studentId, StudentRequest studentRequest);
 
     /* Delete a Student */
     public void deleteStudent(String studentId);
@@ -47,4 +48,6 @@ public interface StudentService {
 
     /* Get count for Total Student */
     public long getCountTotalStudent();
+
+    public String studentLogIn(User user);
 }

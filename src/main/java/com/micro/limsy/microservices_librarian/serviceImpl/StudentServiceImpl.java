@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.micro.limsy.microservices_librarian.dto.BookResponse;
 import com.micro.limsy.microservices_librarian.dto.StudentRequest;
 import com.micro.limsy.microservices_librarian.dto.StudentResponse;
+import com.micro.limsy.microservices_librarian.dto.User;
 import com.micro.limsy.microservices_librarian.model.Student;
 import com.micro.limsy.microservices_librarian.model.TotalStudent;
 import com.micro.limsy.microservices_librarian.repository.StudentRepo;
@@ -32,14 +34,22 @@ public class StudentServiceImpl implements StudentService {
     /* Create a student */
     @Override
     public void createStudent(StudentRequest studentRequest) {
+        // Checking whether the student is valid or not
+        // for (TotalStudent stu : this.totalStudentRepo.findAll())
+        // if (stu.getName() == studentRequest.getName() && stu.getRollNo() ==
+        // studentRequest.getRollNo())
+        // throw new EntityNotFoundException("No record found for this student");
+
+        // Check whether student data already exists or not
+        for (Student stu : this.studentRepo.findAll())
+            if (stu.getName() == studentRequest.getName() && stu.getRollNo() == studentRequest.getRollNo())
+                throw new EntityExistsException("Student already exist...");
+
+        // Saving new student data
         Student student = maptoStudent(studentRequest);
         student.setStuId(UUID.randomUUID().toString());
         student.setDate(new Date());
-
-        // Checking whether the student is valid or not
-        for (TotalStudent stu : this.totalStudentRepo.findAll())
-            if (stu.getName() == student.getName() && stu.getRollNo() == student.getRollNo())
-                studentRepo.save(student);
+        studentRepo.save(student);
     }
 
     /* Get all Students */
@@ -62,10 +72,8 @@ public class StudentServiceImpl implements StudentService {
 
     /* Update a Student */
     @Override
-    public StudentResponse updateStudent(StudentRequest studentRequest) {
-        Student oldStudent = studentRepo.findAll().stream()
-                .filter(stu -> stu.getEmail().equals(studentRequest.getEmail()))
-                .findAny().get();
+    public StudentResponse updateStudent(String studentId, StudentRequest studentRequest) {
+        Student oldStudent = getStudentById(studentId);
 
         if (oldStudent == null)
             throw new EntityNotFoundException("Student not found...");
@@ -209,6 +217,15 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public long getCountTotalStudent() {
         return this.totalStudentRepo.count();
+    }
+
+    @Override
+    public String studentLogIn(User user) {
+        Student student = studentRepo.findAll().stream()
+                .filter(stu -> stu.getEmail().equals(user.getEmail()) && stu.getPassword().equals(user.getPassword()))
+                .findAny().orElseThrow(() -> new EntityNotFoundException("Student doesn't exist"));
+
+        return student.getStuId();
     }
 
 }

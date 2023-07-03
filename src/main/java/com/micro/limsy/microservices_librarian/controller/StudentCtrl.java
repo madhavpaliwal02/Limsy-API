@@ -3,6 +3,7 @@ package com.micro.limsy.microservices_librarian.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.micro.limsy.microservices_librarian.dto.BookResponse;
 import com.micro.limsy.microservices_librarian.dto.StudentRequest;
 import com.micro.limsy.microservices_librarian.dto.StudentResponse;
+import com.micro.limsy.microservices_librarian.dto.User;
 import com.micro.limsy.microservices_librarian.serviceImpl.service.StudentService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,9 +25,17 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/student")
 @RequiredArgsConstructor
+// @CrossOrigin("http://localhost:3000")
 public class StudentCtrl {
 
     private final StudentService studentService;
+
+    /* Login Student */
+    @PostMapping("/login")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public String StudentLogIn(@RequestBody User user) {
+        return studentService.studentLogIn(user);
+    }
 
     /* Create a Student */
     @PostMapping
@@ -50,10 +60,11 @@ public class StudentCtrl {
     }
 
     /* Update a Student */
-    @PutMapping
+    @PutMapping("/{studentId}")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public StudentResponse updateStudent(@RequestBody StudentRequest studentRequest) {
-        return studentService.updateStudent(studentRequest);
+    public StudentResponse updateStudent(@PathVariable("studentId") String studentId,
+            @RequestBody StudentRequest studentRequest) {
+        return studentService.updateStudent(studentId, studentRequest);
     }
 
     /* Delete a Student */

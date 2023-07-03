@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class IssuedBookRequest {
+    private String libId;
     private String stuId;
     private String bookId;
-    private String libId;
 }

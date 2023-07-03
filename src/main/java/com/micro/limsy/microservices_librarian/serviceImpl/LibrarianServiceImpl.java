@@ -149,9 +149,9 @@ public class LibrarianServiceImpl implements LibrarianService {
 
     @Override
     public String librarianLogIn(User user) {
-        Librarian librarian = librarianRepo.findAll().stream().filter(lib -> lib.getEmail().equals(user.getEmail())
-                && lib.getPassword().equals(user.getPassword())).findAny()
-                .orElseThrow(() -> new EntityNotFoundException("Invalid Username or Password..."));
+        Librarian librarian = librarianRepo.findAll().stream()
+            .filter(lib -> lib.getEmail().equals(user.getEmail()) && lib.getPassword().equals(user.getPassword()))
+            .findAny().orElseThrow(() -> new EntityNotFoundException("Invalid Username or Password..."));
 
         return librarian.getLibId();
     }
