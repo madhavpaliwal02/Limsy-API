@@ -3,6 +3,7 @@ package com.micro.limsy.microservices_librarian.serviceImpl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.persistence.EntityExistsException;
@@ -33,11 +34,13 @@ public class BookServiceImpl implements BookService {
     @Override
     public void createBook(BookRequest bookRequest) {
         // Checking whether data exists
-        Book oldBook = this.bookRepo.findAll().stream().filter(book -> book.getTitle().equals(bookRequest.getTitle()) &&
-                book.getAuthorName().equals(bookRequest.getAuthorName()) &&
-                book.getEdition().equals(bookRequest.getEdition())).findAny().get();
+        Optional<Book> oldBook = this.bookRepo.findAll().stream()
+                .filter(book -> book.getTitle().equals(bookRequest.getTitle()) &&
+                        book.getAuthorName().equals(bookRequest.getAuthorName()) &&
+                        book.getEdition().equals(bookRequest.getEdition()))
+                .findAny();
 
-        if (oldBook != null)
+        if (oldBook.isPresent())
             throw new EntityExistsException("Book already exists...");
 
         // Saving new book data

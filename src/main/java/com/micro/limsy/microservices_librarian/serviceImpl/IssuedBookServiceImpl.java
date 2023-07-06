@@ -3,6 +3,7 @@ package com.micro.limsy.microservices_librarian.serviceImpl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -44,18 +45,15 @@ public class IssuedBookServiceImpl implements IssuedBookService {
     /* Issued a Book */
     @Override
     public void issueBook(IssuedBookRequest iBookRequest) {
-        System.out.println(iBookRequest);
-
         List<IssuedBook> list = this.issuedBookRepo.findAll();
-
-        if (list.size() != 0) {
-            IssuedBook oldBook = list.stream()
-                    .filter(ibook -> ibook.getLibrarianId().equals(iBookRequest.getLibId()) &&
-                            ibook.getStudentId().equals(iBookRequest.getStuId()) &&
+        // System.out.println(list);
+        if (list.size() > 0) {
+            Optional<IssuedBook> oldBook = list.stream()
+                    .filter(ibook -> ibook.getStudentId().equals(iBookRequest.getStuId()) &&
                             ibook.getBookId().equals(iBookRequest.getBookId()))
-                    .findAny().get();
+                    .findAny();
 
-            if (oldBook != null)
+            if (oldBook.isPresent())
                 throw new EntityExistsException("Book already issued...");
         }
         // Saving new issuedBook data
@@ -69,13 +67,17 @@ public class IssuedBookServiceImpl implements IssuedBookService {
     @Override
     public List<IssuedBookResponse> getAllIssuedBooks() {
         List<IssuedBookResponse> IssuedBookResponseList = new ArrayList<>();
+        List<IssuedBook> issuedBookList = issuedBookRepo.findAll();
+        if (issuedBookList.size() == 0)
+            throw new EntityNotFoundException("No records found...");
 
-        for (IssuedBook ib : issuedBookRepo.findAll()) {
+        for (IssuedBook ib : issuedBookList) {
             Librarian lib = getLibrarianByURL(ib.getLibrarianId());
             Student stu = getStudentByURL(ib.getStudentId());
             Book book = getBookByURL(ib.getBookId());
             IssuedBookResponseList.add(mapToIssuedBookResponse(lib, stu, book, ib));
         }
+        System.out.println(IssuedBookResponseList);
         return IssuedBookResponseList;
     }
 

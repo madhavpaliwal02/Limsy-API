@@ -15,10 +15,10 @@ public class MicroservicesLibrarianApplication {
 		SpringApplication.run(MicroservicesLibrarianApplication.class, args);
 	}
 
-	@Bean
-	// @LoadBalanced
-	RestTemplate restTemplate() {
-		return new RestTemplate();
-	}
+	// @Bean
+	// // @LoadBalanced
+	// RestTemplate restTemplate() {
+	// 	return new RestTemplate();
+	// }
 
 }

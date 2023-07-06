@@ -42,7 +42,10 @@ public class StudentServiceImpl implements StudentService {
 
         // Check whether student data already exists or not
         for (Student stu : this.studentRepo.findAll())
-            if (stu.getName() == studentRequest.getName() && stu.getRollNo() == studentRequest.getRollNo())
+            if (stu.getName().equals(studentRequest.getName())
+                    && stu.getEmail().equals(studentRequest.getEmail())
+                    && (stu.getRollNo().equals(studentRequest.getRollNo())
+                            || stu.getEnrollment().equals(studentRequest.getEnrollment())))
                 throw new EntityExistsException("Student already exist...");
 
         // Saving new student data
@@ -61,13 +64,7 @@ public class StudentServiceImpl implements StudentService {
     /* Get a Student */
     @Override
     public StudentResponse getStudent(String studentId) {
-        Student stu = studentRepo.findAll().stream().filter(student -> student.getStuId().equals(studentId))
-                .findAny().get();
-
-        if (stu == null)
-            throw new EntityNotFoundException("Student not found...");
-
-        return maptoStudentResponse(stu);
+        return maptoStudentResponse(getStudentById(studentId));
     }
 
     /* Update a Student */
@@ -77,6 +74,8 @@ public class StudentServiceImpl implements StudentService {
 
         if (oldStudent == null)
             throw new EntityNotFoundException("Student not found...");
+
+        
 
         Student student = maptoStudent(studentRequest);
         student.setStuId(oldStudent.getStuId());
@@ -160,6 +159,9 @@ public class StudentServiceImpl implements StudentService {
                 .date(student.getDate())
                 .build();
     }
+
+    /* Validate student update */
+    // public
 
     /****************************
      * Additional Functions
