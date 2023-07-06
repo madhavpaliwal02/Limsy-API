@@ -18,7 +18,7 @@ public interface BookService {
     public BookResponse getBook(String bookId);
     
     /* Update a Book */
-    public BookResponse updateBook(BookRequest bookRequest);
+    public BookResponse updateBook(String bookId, BookRequest bookRequest);
     
     /* Delete a Book */
     public void deleteBook(String bookId);

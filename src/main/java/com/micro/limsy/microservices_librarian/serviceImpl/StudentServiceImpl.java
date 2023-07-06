@@ -72,11 +72,11 @@ public class StudentServiceImpl implements StudentService {
     public StudentResponse updateStudent(String studentId, StudentRequest studentRequest) {
         Student oldStudent = getStudentById(studentId);
 
-        if (oldStudent == null)
-            throw new EntityNotFoundException("Student not found...");
+        // Validating student
+        if (!validateStudentUpdate(studentId, studentRequest))
+            throw new EntityExistsException("Email is already in use...");
 
-        
-
+        // Updating student
         Student student = maptoStudent(studentRequest);
         student.setStuId(oldStudent.getStuId());
         student.setDate(oldStudent.getDate());
@@ -90,12 +90,14 @@ public class StudentServiceImpl implements StudentService {
     /* Delete a Student */
     @Override
     public void deleteStudent(String studentId) {
-        Student student = studentRepo.findAll().stream().filter(stu -> stu.getStuId().equals(studentId))
-                .findAny().get();
+        // Getting the student
+        Student student = getStudentById(studentId);
 
-        if (student == null)
-            throw new EntityNotFoundException("Student not found...");
+        // If having issuedbooks to be return
+        if (getMyIssuedBook(studentId).size() != 0)
+            throw new EntityExistsException("Student have issuedbooks to be return...");
 
+        // Deleting student
         studentRepo.delete(student);
     }
 
@@ -161,7 +163,13 @@ public class StudentServiceImpl implements StudentService {
     }
 
     /* Validate student update */
-    // public
+    private boolean validateStudentUpdate(String studentId, StudentRequest student) {
+        for (Student stu : this.studentRepo.findAll())
+            if (!stu.getStuId().equals(studentId) && student.getEmail() == stu.getEmail())
+                return false;
+
+        return true;
+    }
 
     /****************************
      * Additional Functions

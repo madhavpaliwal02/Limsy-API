@@ -46,7 +46,8 @@ public class IssuedBookServiceImpl implements IssuedBookService {
     @Override
     public void issueBook(IssuedBookRequest iBookRequest) {
         List<IssuedBook> list = this.issuedBookRepo.findAll();
-        // System.out.println(list);
+
+        // Checking whether book is already issued or not
         if (list.size() > 0) {
             Optional<IssuedBook> oldBook = list.stream()
                     .filter(ibook -> ibook.getStudentId().equals(iBookRequest.getStuId()) &&
@@ -56,6 +57,7 @@ public class IssuedBookServiceImpl implements IssuedBookService {
             if (oldBook.isPresent())
                 throw new EntityExistsException("Book already issued...");
         }
+
         // Saving new issuedBook data
         IssuedBook issuedBook = mapToIssuedBook(iBookRequest);
         issuedBook.setIBookId(UUID.randomUUID().toString());
@@ -87,7 +89,7 @@ public class IssuedBookServiceImpl implements IssuedBookService {
         IssuedBookResponse issuedBookResponse = getAllIssuedBooks().stream()
                 .filter(ibookRes -> ibookRes.getIBookId().equals(ibookId))
                 .findAny().get();
-        System.out.println(issuedBookResponse);
+
         if (issuedBookResponse != null)
             return issuedBookResponse;
         throw new EntityNotFoundException("IssuedBook not found...");
@@ -96,11 +98,7 @@ public class IssuedBookServiceImpl implements IssuedBookService {
     /* Delete a IssuedBook */
     @Override
     public void deleteIssuedBook(String ibookId) {
-        IssuedBook issuedBook = issuedBookRepo.findAll().stream()
-                .filter(ibook -> ibook.getIBookId().equals(ibookId))
-                .findAny().get();
-        if (issuedBook == null)
-            throw new EntityNotFoundException("IssuedBook not found...");
+        IssuedBook issuedBook = getAllIssueBooks(ibookId);
         issuedBookRepo.delete(issuedBook);
     }
 
@@ -173,9 +171,7 @@ public class IssuedBookServiceImpl implements IssuedBookService {
     @Override
     public IssuedBook getAllIssueBooks(String ibookId) {
         IssuedBook iBook = getAllIssueBooks().stream().filter(ibook -> ibook.getIBookId().equals(ibookId))
-                .findAny().get();
-        if (iBook == null)
-            throw new EntityNotFoundException("IssuedBook Not Found");
+                .findAny().orElseThrow(() -> new EntityNotFoundException("IssuedBook Not Found"));
         return iBook;
     }
 

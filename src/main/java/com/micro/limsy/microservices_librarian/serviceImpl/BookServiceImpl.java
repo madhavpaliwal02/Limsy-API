@@ -71,15 +71,14 @@ public class BookServiceImpl implements BookService {
 
     /* Update a Book */
     @Override
-    public BookResponse updateBook(BookRequest bookRequest) {
-        Book oldBook = bookRepo.findAll().stream().filter(b -> b.getTitle().equals(bookRequest.getTitle())
-                && b.getAuthorName().equals(bookRequest.getAuthorName())
-                && b.getEdition().equals(bookRequest.getEdition()))
-                .findAny().get();
+    public BookResponse updateBook(String bookId, BookRequest bookRequest) {
+        Book oldBook = getBookById(bookId);
 
-        if (oldBook == null)
-            throw new EntityNotFoundException("Book is not available");
+        // Validating book for not having duplicate details
+        if (!validateBookUpdate(bookId, bookRequest))
+            throw new EntityExistsException("Book is already in the library...");
 
+        // Updating book
         Book book = mapToBook(bookRequest);
         book.setBookId(oldBook.getBookId());
         book.setDate(oldBook.getDate());
@@ -93,12 +92,20 @@ public class BookServiceImpl implements BookService {
     /* Delete a Book */
     @Override
     public void deleteBook(String bookId) {
+        // Getting the book
         Book book = bookRepo.findAll().stream().filter(b -> b.getBookId().equals(bookId))
                 .findAny().get();
 
+        // Checking if exists or not
         if (book == null)
             throw new EntityNotFoundException("Book is not available");
 
+        // Validating that it is not issued
+        for (IssuedBook ib : issuedBookRepo.findAll())
+            if (ib.getBookId().equals(bookId))
+                throw new EntityExistsException("Book is issued by student, can't be deleted...");
+
+        // Deleting
         bookRepo.delete(book);
     }
 
@@ -170,6 +177,17 @@ public class BookServiceImpl implements BookService {
     @Override
     public long getCount() {
         return this.bookRepo.count();
+    }
+
+    private boolean validateBookUpdate(String bookId, BookRequest bookRequest) {
+        for (Book book : this.bookRepo.findAll()) {
+            if (!book.getBookId().equals(bookId)
+                    && book.getTitle().equals(bookRequest.getTitle())
+                    && book.getAuthorName().equals(bookRequest.getAuthorName())
+                    && book.getEdition().equals(bookRequest.getEdition()))
+                return false;
+        }
+        return true;
     }
 
 }

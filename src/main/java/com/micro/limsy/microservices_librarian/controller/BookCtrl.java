@@ -3,7 +3,6 @@ package com.micro.limsy.microservices_librarian.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/book")
 @RequiredArgsConstructor
-// @CrossOrigin("http://localhost:3000")
 public class BookCtrl {
 
     private final BookService bookService;
@@ -51,10 +49,10 @@ public class BookCtrl {
     }
 
     /* Update a Book */
-    @PutMapping
+    @PutMapping("/{bookId}")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public BookResponse updateBook(@RequestBody BookRequest bookRequest) {
-        return bookService.updateBook(bookRequest);
+    public BookResponse updateBook(@PathVariable("bookId") String bookId, @RequestBody BookRequest bookRequest) {
+        return bookService.updateBook(bookId, bookRequest);
     }
 
     /* Delete a Book */

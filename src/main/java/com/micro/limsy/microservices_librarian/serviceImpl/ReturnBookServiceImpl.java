@@ -13,16 +13,16 @@ import com.micro.limsy.microservices_librarian.serviceImpl.service.LibrarianServ
 import com.micro.limsy.microservices_librarian.serviceImpl.service.ReturnBookService;
 import com.micro.limsy.microservices_librarian.serviceImpl.service.StudentService;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 // import org.springframework.web.client.RestTemplate;
 
 import lombok.RequiredArgsConstructor;
-
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
@@ -40,19 +40,19 @@ public class ReturnBookServiceImpl implements ReturnBookService {
     /* Return a Book */
     @Override
     public void returnBook(String iBookId) {
-
-        // String url = "http://issuedbook-service/api/issuedbook/ib/" + iBookId;
-
         // Get the IssuedBook from IssuedBook Service
-        // IssuedBook ibook = restTemplate.getForObject(url, IssuedBook.class);
         IssuedBook ibook = issuedBookService.getAllIssueBooks(iBookId);
 
-        // If record not found, then
-        if (ibook == null)
-            throw new EntityNotFoundException("IssuedBook not found...");
+        // Checking whether already return
+        for (ReturnBook rbook : this.returnBookRepo.findAll()) {
+            if (rbook.getLibrarianId().equals(ibook.getLibrarianId())
+                    && rbook.getStudentId().equals(ibook.getStudentId())
+                    && rbook.getBookId().equals(ibook.getBookId()))
+                throw new EntityExistsException("Book is already returned...");
+        }
 
         // We need to delete that record from IssuedBook
-        // restTemplate.delete("http://issuedbook-service/api/issuedbook/" + iBookId);
+        issuedBookService.deleteIssuedBook(iBookId);
 
         // And added it in a returnbook object
         ReturnBook returnBook = mapToReturnBook(ibook);
@@ -64,32 +64,20 @@ public class ReturnBookServiceImpl implements ReturnBookService {
     /* Get All ReturnBooks */
     @Override
     public List<ReturnBookResponse> getAllReturnBooks() {
-        List<ReturnBookResponse> returnBookResponseList = new ArrayList<>();
-
-        returnBookRepo.findAll().stream().map(rbook -> returnBookResponseList.add(mapToReturnBookResponse(rbook)));
-
-        return returnBookResponseList;
+        return returnBookRepo.findAll().stream().map(this::mapToReturnBookResponse).collect(Collectors.toList());
     }
 
     /* Get a ReturnBook */
     @Override
     public ReturnBookResponse getReturnBook(String rBookId) {
-        ReturnBook rBook = returnBookRepo.findAll().stream().filter(rbook -> rbook.getRbookId().equals(rBookId))
-                .findAny().get();
-
-        if (rBook == null)
-            throw new EntityNotFoundException("ReturnBook Not Found");
+        ReturnBook rBook = getReturnedBooks(rBookId);
         return mapToReturnBookResponse(rBook);
     }
 
     /* Delete a ReturnBook */
     @Override
     public void deleteReturnBook(String rBookId) {
-        ReturnBook rBook = returnBookRepo.findAll().stream().filter(rbook -> rbook.getRbookId().equals(rBookId))
-                .findAny().get();
-
-        if (rBook == null)
-            throw new EntityNotFoundException("ReturnBook Not Found...");
+        ReturnBook rBook = getReturnedBooks(rBookId);
         returnBookRepo.delete(rBook);
     }
 
@@ -106,17 +94,6 @@ public class ReturnBookServiceImpl implements ReturnBookService {
 
     /* Mapping Function : Librarian + Student + Book -> ReturnBook */
     private ReturnBookResponse mapToReturnBookResponse(ReturnBook rbook) {
-
-        // Librarian lib =
-        // restTemplate.getForObject("http://librarian-service/api/librarian/" +
-        // rbook.getLibrarianId(),
-        // Librarian.class);
-        // Student stu = restTemplate.getForObject("http://student-service/api/student/"
-        // + rbook.getStudentId(),
-        // Student.class);
-        // Book book = restTemplate.getForObject("http://book-service/api/book/" +
-        // rbook.getBookId(),
-        // Book.class);
 
         Librarian lib = librarianService.getLibrarianById(rbook.getLibrarianId());
         Student stu = studentService.getStudentById(rbook.getStudentId());
@@ -152,7 +129,7 @@ public class ReturnBookServiceImpl implements ReturnBookService {
     @Override
     public ReturnBook getReturnedBooks(String rBookId) {
         return getAllReturnedBooks().stream().filter(rbook -> rbook.getRbookId().equals(rBookId))
-                .findAny().get();
+                .findAny().orElseThrow(() -> new EntityNotFoundException("Book not found..."));
     }
 
     /* Get Count for ReturnBooks */

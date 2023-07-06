@@ -14,7 +14,7 @@ import com.micro.limsy.microservices_librarian.dto.IssuedBookResponse;
 import com.micro.limsy.microservices_librarian.dto.LibrarianRequest;
 import com.micro.limsy.microservices_librarian.dto.LibrarianResponse;
 import com.micro.limsy.microservices_librarian.dto.User;
-import com.micro.limsy.microservices_librarian.exception.ResourceNotFoundException;
+import com.micro.limsy.microservices_librarian.model.IssuedBook;
 import com.micro.limsy.microservices_librarian.model.Librarian;
 import com.micro.limsy.microservices_librarian.repository.LibrarianRepo;
 import com.micro.limsy.microservices_librarian.serviceImpl.service.IssuedBookService;
@@ -44,7 +44,7 @@ public class LibrarianServiceImpl implements LibrarianService {
                         && lib.getName().equals(librarianReq.getName())
                         && lib.getPassword().equals(librarianReq.getPassword()))
                 .findAny().isPresent())
-            throw new EntityExistsException();
+            throw new EntityExistsException("Librarian Already Exists...");
 
         // If not found then create one
         Librarian librarian = mapToLibrarian(librarianReq);
@@ -73,13 +73,17 @@ public class LibrarianServiceImpl implements LibrarianService {
         // Old details, to be update
         Librarian oldLib = getLibrarianById(librarianId);
 
+        // Validate librarian
+        if (!validateLibrarianUpdate(librarianRequest, librarianId))
+            throw new EntityExistsException("Librarian Exists with given details...");
+
         // Updating details
         Librarian lib = mapToLibrarian(librarianRequest);
         lib.setLibId(oldLib.getLibId());
         lib.setDate(oldLib.getDate());
 
-        librarianRepo.save(lib); // Saving new details
         librarianRepo.delete(oldLib); // Deleting old details
+        librarianRepo.save(lib); // Saving new details
 
         return mapToLibrarianResponse(lib);
     }
@@ -87,7 +91,15 @@ public class LibrarianServiceImpl implements LibrarianService {
     /* Delete a Librarian */
     @Override
     public void deleteLibrarian(String librarianId) {
+        // Fetching the librarian if exists
         Librarian lib = getLibrarianById(librarianId);
+
+        // Validating that no books are issued by librarian
+        for (IssuedBook ibook : this.issuedBookService.getAllIssueBooks())
+            if (ibook.getLibrarianId().equals(librarianId))
+                throw new EntityExistsException("Librarian has issued some books...");
+
+        // Deleting
         librarianRepo.delete(lib);
     }
 
@@ -99,7 +111,7 @@ public class LibrarianServiceImpl implements LibrarianService {
     @Override
     public Librarian getLibrarianById(String librarianId) {
         return this.librarianRepo.findAll().stream().filter(lib -> lib.getLibId().equals(librarianId))
-                .findAny().orElseThrow(() -> new ResourceNotFoundException("Librarian", "librarianId", librarianId));
+                .findAny().orElseThrow(() -> new EntityNotFoundException("Librarian not found..."));
     }
 
     /* Mapping Func : Lib -> LibRes */
@@ -126,6 +138,17 @@ public class LibrarianServiceImpl implements LibrarianService {
                 .build();
     }
 
+    /* Validate Librarian Update */
+    private boolean validateLibrarianUpdate(LibrarianRequest librarianRequest, String librarianId) {
+        for (Librarian lib : this.librarianRepo.findAll()) {
+            if (!lib.getLibId().equals(librarianId)
+                    && lib.getName().equals(librarianRequest.getName())
+                    && lib.getEmail().equals(librarianRequest.getEmail()))
+                return false;
+        }
+        return true;
+    }
+
     /*
      ***************************** Additional Functions *****************************
      */
@@ -150,8 +173,8 @@ public class LibrarianServiceImpl implements LibrarianService {
     @Override
     public String librarianLogIn(User user) {
         Librarian librarian = librarianRepo.findAll().stream()
-            .filter(lib -> lib.getEmail().equals(user.getEmail()) && lib.getPassword().equals(user.getPassword()))
-            .findAny().orElseThrow(() -> new EntityNotFoundException("Invalid Username or Password..."));
+                .filter(lib -> lib.getEmail().equals(user.getEmail()) && lib.getPassword().equals(user.getPassword()))
+                .findAny().orElseThrow(() -> new EntityNotFoundException("Invalid Username or Password..."));
 
         return librarian.getLibId();
     }
