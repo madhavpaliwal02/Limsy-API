@@ -114,6 +114,11 @@ public class LibrarianServiceImpl implements LibrarianService {
                 .findAny().orElseThrow(() -> new EntityNotFoundException("Librarian not found..."));
     }
 
+    // /* Get all Librarian */
+    // public List<Librarian> getAllLibrarians() {
+    // return this.librarianRepo.findAll();
+    // }
+
     /* Mapping Func : Lib -> LibRes */
     private LibrarianResponse mapToLibrarianResponse(Librarian librarian) {
         return LibrarianResponse.builder()
@@ -163,6 +168,7 @@ public class LibrarianServiceImpl implements LibrarianService {
         List<IssuedBookResponse> list = issuedBookService.getIssuedBooks_Librarian(librarianId);
         return list;
     }
+
 
     /* Get count for Librarians */
     @Override

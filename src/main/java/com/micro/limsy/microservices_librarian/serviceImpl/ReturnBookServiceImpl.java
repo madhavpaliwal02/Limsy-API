@@ -13,13 +13,13 @@ import com.micro.limsy.microservices_librarian.serviceImpl.service.LibrarianServ
 import com.micro.limsy.microservices_librarian.serviceImpl.service.ReturnBookService;
 import com.micro.limsy.microservices_librarian.serviceImpl.service.StudentService;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-// import org.springframework.web.client.RestTemplate;
 
 import lombok.RequiredArgsConstructor;
 import jakarta.persistence.EntityExistsException;
@@ -81,7 +81,7 @@ public class ReturnBookServiceImpl implements ReturnBookService {
         returnBookRepo.delete(rBook);
     }
 
-    /************************ Additional Functions ************************/
+    /************************** Helper Function ******************/
 
     /* Mapping Function : ReturnBookReq -> ReturnBook */
     private ReturnBook mapToReturnBook(IssuedBook iBook) {
@@ -94,10 +94,9 @@ public class ReturnBookServiceImpl implements ReturnBookService {
 
     /* Mapping Function : Librarian + Student + Book -> ReturnBook */
     private ReturnBookResponse mapToReturnBookResponse(ReturnBook rbook) {
-
-        Librarian lib = librarianService.getLibrarianById(rbook.getLibrarianId());
-        Student stu = studentService.getStudentById(rbook.getStudentId());
-        Book book = bookService.getBookById(rbook.getBookId());
+        Librarian lib = getLibrarianByURL(rbook.getLibrarianId());
+        Student stu = getStudentByURL(rbook.getStudentId());
+        Book book = getBookByURL(rbook.getBookId());
 
         ReturnBookResponse rBookResponse = ReturnBookResponse.builder()
                 // returnBook Details
@@ -119,6 +118,30 @@ public class ReturnBookServiceImpl implements ReturnBookService {
         return rBookResponse;
     }
 
+    /* Get Librarian By URL */
+    private Librarian getLibrarianByURL(String librarianId) {
+        // return restTemplate.getForObject("http://librarian-service/api/librarian/" +
+        // librarianId,
+        // Librarian.class);
+        return librarianService.getLibrarianById(librarianId);
+    }
+
+    /* Get Student By URL */
+    private Student getStudentByURL(String studentId) {
+        // return restTemplate.getForObject("http://student-service/api/student/" +
+        // studentId,
+        // Student.class);
+        return studentService.getStudentById(studentId);
+    }
+
+    /* Get Book By URL */
+    private Book getBookByURL(String bookId) {
+        // return restTemplate.getForObject("http://book-service/api/book/" + bookId,
+        // Book.class);
+        return bookService.getBookById(bookId);
+    }
+
+    /************************ Additional Functions ************************/
     /* Get All ReturnedBooks */
     @Override
     public List<ReturnBook> getAllReturnedBooks() {
@@ -130,6 +153,17 @@ public class ReturnBookServiceImpl implements ReturnBookService {
     public ReturnBook getReturnedBooks(String rBookId) {
         return getAllReturnedBooks().stream().filter(rbook -> rbook.getRbookId().equals(rBookId))
                 .findAny().orElseThrow(() -> new EntityNotFoundException("Book not found..."));
+    }
+
+    /* Get all ReturnBooks for a Librarian */
+    public List<ReturnBookResponse> getReturnBooks_Librarian(String librarianId) {
+        // Filtered for a librarian & mapping to ReturnBookResponse
+        List<ReturnBookResponse> rbookList = new ArrayList<>();
+        for (ReturnBook rbook : this.returnBookRepo.findAll())
+            if (rbook.getLibrarianId().equals(librarianId))
+                rbookList.add(mapToReturnBookResponse(rbook));
+
+        return rbookList;
     }
 
     /* Get Count for ReturnBooks */

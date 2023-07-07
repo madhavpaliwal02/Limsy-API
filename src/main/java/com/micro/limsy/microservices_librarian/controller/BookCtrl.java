@@ -52,6 +52,7 @@ public class BookCtrl {
     @PutMapping("/{bookId}")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public BookResponse updateBook(@PathVariable("bookId") String bookId, @RequestBody BookRequest bookRequest) {
+        System.out.println("Book Ctrl");
         return bookService.updateBook(bookId, bookRequest);
     }
 

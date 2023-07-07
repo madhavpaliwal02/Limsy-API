@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,7 +22,6 @@ import com.micro.limsy.microservices_librarian.repository.IssuedBookRepo;
 import com.micro.limsy.microservices_librarian.repository.LibrarianRepo;
 import com.micro.limsy.microservices_librarian.serviceImpl.service.BookService;
 import com.micro.limsy.microservices_librarian.serviceImpl.service.IssuedBookService;
-// import com.micro.limsy.microservices_librarian.serviceImpl.service.LibrarianService;
 import com.micro.limsy.microservices_librarian.serviceImpl.service.StudentService;
 
 import lombok.RequiredArgsConstructor;
@@ -33,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 public class IssuedBookServiceImpl implements IssuedBookService {
 
     private final IssuedBookRepo issuedBookRepo;
-    // private final LibrarianService librarianService;
     private final LibrarianRepo librarianRepo;
     private final StudentService studentService;
     private final BookService bookService;
@@ -73,13 +70,10 @@ public class IssuedBookServiceImpl implements IssuedBookService {
         if (issuedBookList.size() == 0)
             throw new EntityNotFoundException("No records found...");
 
-        for (IssuedBook ib : issuedBookList) {
-            Librarian lib = getLibrarianByURL(ib.getLibrarianId());
-            Student stu = getStudentByURL(ib.getStudentId());
-            Book book = getBookByURL(ib.getBookId());
-            IssuedBookResponseList.add(mapToIssuedBookResponse(lib, stu, book, ib));
-        }
-        System.out.println(IssuedBookResponseList);
+        for (IssuedBook ib : issuedBookList)
+            IssuedBookResponseList.add(mapToIssuedBookResponse(ib));
+
+        // System.out.println(IssuedBookResponseList);
         return IssuedBookResponseList;
     }
 
@@ -114,8 +108,12 @@ public class IssuedBookServiceImpl implements IssuedBookService {
     }
 
     /* Mapping Function : IssuedBook -> IssuedBookResponse */
-    private IssuedBookResponse mapToIssuedBookResponse(Librarian librarian, Student student, Book book,
-            IssuedBook ibook) {
+    private IssuedBookResponse mapToIssuedBookResponse(IssuedBook ibook) {
+
+        Librarian lib = getLibrarianByURL(ibook.getLibrarianId());
+        Student stu = getStudentByURL(ibook.getStudentId());
+        Book book = getBookByURL(ibook.getBookId());
+
         return IssuedBookResponse.builder()
                 // IssuedBook Details
                 .iBookId(ibook.getIBookId())
@@ -125,13 +123,13 @@ public class IssuedBookServiceImpl implements IssuedBookService {
                 .authorName(book.getAuthorName())
                 .edition(book.getEdition())
                 // Student Details
-                .sname(student.getName())
-                .rollNo(student.getRollNo())
-                .course(student.getCourse())
-                .sgender(student.getGender())
+                .sname(stu.getName())
+                .rollNo(stu.getRollNo())
+                .course(stu.getCourse())
+                .sgender(stu.getGender())
                 // Librarian Details
-                .lname(librarian.getName())
-                .lgender(librarian.getGender())
+                .lname(lib.getName())
+                .lgender(lib.getGender())
                 .build();
     }
 
@@ -178,19 +176,12 @@ public class IssuedBookServiceImpl implements IssuedBookService {
     /* Get all IssuedBooks for a Librarian */
     @Override
     public List<IssuedBookResponse> getIssuedBooks_Librarian(String librarianId) {
-        // Filtering for a librarian
-        List<IssuedBook> ibList = this.getAllIssueBooks().stream()
-                .filter(ibook -> ibook.getLibrarianId().equals(librarianId))
-                .collect(Collectors.toList());
-
-        // Mapping IssuedBook to IssuedBookResponse
+        // Filtering for a librarian & Mapping IssuedBook to IssuedBookResponse
         List<IssuedBookResponse> list = new ArrayList<>();
-        for (IssuedBook ib : ibList) {
-            Librarian lib = getLibrarianByURL(ib.getLibrarianId());
-            Student stu = getStudentByURL(ib.getStudentId());
-            Book book = getBookByURL(ib.getBookId());
-            list.add(mapToIssuedBookResponse(lib, stu, book, ib));
-        }
+        for (IssuedBook ib : issuedBookRepo.findAll())
+            if (ib.getLibrarianId().equals(librarianId))
+                list.add(mapToIssuedBookResponse(ib));
+
         return list;
     }
 

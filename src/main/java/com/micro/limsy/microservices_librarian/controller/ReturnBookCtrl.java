@@ -76,4 +76,10 @@ public class ReturnBookCtrl {
         return this.returnBookService.getCount();
     }
 
+    @GetMapping("/librarian/{librarianId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ReturnBookResponse> getAllReturnBook_Librarian(@PathVariable("librarianId") String librarianId) {
+        return this.returnBookService.getReturnBooks_Librarian(librarianId);
+    }
+
 }

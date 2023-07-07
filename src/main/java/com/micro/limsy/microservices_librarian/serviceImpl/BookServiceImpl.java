@@ -152,24 +152,20 @@ public class BookServiceImpl implements BookService {
     /* Get IssuedBooks for Student */
     @Override
     public List<BookResponse> getIssuedBook_Student(String studentId) {
-        // Get All IssuedBooks corresponding to
-        // url = "http://issuedbook-service/api/issuedbook/student-ib/" + studentId;
-        // IssuedBook[] ibook = restTemplate.getForObject(url, IssuedBook[].class);
-
-        List<IssuedBook> ibook = new ArrayList<>();
-        for (IssuedBook ib : issuedBookRepo.findAll())
-            if (ib.getStudentId().equals(studentId))
-                ibook.add(ib);
-
         List<BookResponse> list = new ArrayList<>();
 
-        for (IssuedBook ib : ibook) {
-            String bid = ib.getBookId();
-            for (BookResponse book : getAllBooks()) {
-                if (bid.equals(book.getBookId()))
-                    list.add(book);
+        // For all issuedBooks
+        for (IssuedBook ib : issuedBookRepo.findAll()) {
+            // Filtering the records on the basis of studentId
+            if (ib.getStudentId().equals(studentId)) {
+                // Get BookResponse for the bookId from IssuedBook
+                BookResponse book = getBook(ib.getBookId());
+                // Change the bookId to iBookId
+                book.setBookId(ib.getIBookId());
+                list.add(book);
             }
         }
+
         return list;
     }
 
